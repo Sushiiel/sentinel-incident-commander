@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SENTINEL — Agentic Incident Commander</title>
+<style>
+  :root {
+    --bg:#070a12; --panel:#0e1322; --panel2:#121a2e; --line:#1d2640;
+    --txt:#e2e8f4; --dim:#8b96b3; --acc:#818cf8; --acc2:#34d399;
+    --bad:#f87171; --warn:#fbbf24; --r:12px;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { background:radial-gradient(1200px 500px at 70% -10%, #1e1b4b55, transparent), var(--bg);
+         color:var(--txt); font:14px/1.6 ui-sans-serif,-apple-system,'Segoe UI',Inter,Roboto,sans-serif;
+         min-height:100vh; }
+  code, pre, textarea, .mono { font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace; }
+  header { padding:34px 32px 26px; max-width:1180px; margin:0 auto; }
+  .crumb { display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:1.4px;
+           text-transform:uppercase; color:var(--acc); background:#818cf81a; border:1px solid #818cf833;
+           padding:5px 12px; border-radius:999px; margin-bottom:14px; }
+  .dot { width:7px; height:7px; border-radius:50%; background:var(--acc2); animation:pulse 1.6s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  h1 { font-size:26px; font-weight:800; letter-spacing:-.4px;
+       background:linear-gradient(90deg,#e2e8f4,#a5b4fc); -webkit-background-clip:text;
+       background-clip:text; -webkit-text-fill-color:transparent; }
+  .sub { color:var(--dim); margin-top:6px; font-size:13.5px; }
+  .sub a { color:var(--acc); text-decoration:none; }
+  .sub a:hover { text-decoration:underline; }
+  main { max-width:1180px; margin:0 auto; padding:0 32px 48px; display:grid;
+         grid-template-columns:minmax(300px,380px) 1fr; gap:18px; }
+  @media (max-width:880px){ main { grid-template-columns:1fr; } }
+  .card { background:linear-gradient(180deg,var(--panel2),var(--panel)); border:1px solid var(--line);
+          border-radius:var(--r); padding:18px; }
+  label { display:block; font-size:10.5px; color:var(--dim); text-transform:uppercase;
+          letter-spacing:1.1px; margin:0 0 8px; font-weight:600; }
+  .eps { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  .ep { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--line);
+        border-radius:9px; cursor:pointer; transition:all .15s; background:transparent; color:var(--txt);
+        font:inherit; text-align:left; width:100%; }
+  .ep:hover { border-color:#818cf866; transform:translateY(-1px); }
+  .ep.active { border-color:var(--acc); background:#818cf812; box-shadow:0 0 0 1px #818cf844; }
+  .method { font-size:10px; font-weight:800; letter-spacing:.6px; padding:3px 8px; border-radius:6px; }
+  .m-get { background:#34d39922; color:var(--acc2); }
+  .m-post { background:#818cf822; color:var(--acc); }
+  .path { font-size:12.5px; }
+  textarea { width:100%; min-height:150px; resize:vertical; background:#0a0f1c; color:var(--txt);
+             border:1px solid var(--line); border-radius:9px; padding:12px; font-size:12.5px;
+             line-height:1.55; outline:none; }
+  textarea:focus { border-color:#818cf877; }
+  .send { margin-top:14px; width:100%; padding:12px; border:0; border-radius:9px; cursor:pointer;
+          font:inherit; font-weight:700; color:#fff; letter-spacing:.2px;
+          background:linear-gradient(90deg,#6366f1,#8b5cf6); transition:filter .15s, transform .1s; }
+  .send:hover { filter:brightness(1.12); }
+  .send:active { transform:scale(.985); }
+  .send:disabled { opacity:.55; cursor:wait; }
+  .meta { display:flex; gap:10px; align-items:center; margin-bottom:10px; min-height:26px; }
+  .badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; display:none; }
+  .b-ok { background:#34d39922; color:var(--acc2); }
+  .b-bad { background:#f8717122; color:var(--bad); }
+  .lat { color:var(--dim); font-size:11.5px; display:none; }
+  pre.out { background:#0a0f1c; border:1px solid var(--line); border-radius:9px; padding:16px;
+            white-space:pre-wrap; word-break:break-word; min-height:260px; font-size:12.5px;
+            line-height:1.55; }
+  .hist { margin-top:16px; }
+  .hist-item { display:flex; gap:10px; align-items:center; font-size:11.5px; color:var(--dim);
+               padding:6px 4px; border-bottom:1px dashed var(--line); cursor:pointer; }
+  .hist-item:hover { color:var(--txt); }
+  .hint { color:var(--dim); font-size:11.5px; margin-top:10px; }
+  .spin { display:inline-block; width:12px; height:12px; border:2px solid #818cf855;
+          border-top-color:var(--acc); border-radius:50%; animation:rot .7s linear infinite;
+          vertical-align:-2px; margin-right:6px; }
+  @keyframes rot { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<header>
+  <div class="crumb"><span class="dot"></span> Agentic AI · AIOps · Multi-Agent Systems · live service</div>
+  <h1>SENTINEL — Agentic Incident Commander</h1>
+  <div class="sub">Interactive console for the FastAPI core · OpenAPI docs at <a href="/docs">/docs</a> · health at <a href="/health">/health</a></div>
+</header>
+<main>
+  <section class="card">
+    <label>Endpoints</label>
+    <div class="eps" id="eps"></div>
+    <label>Request body — JSON</label>
+    <textarea id="body" spellcheck="false"></textarea>
+    <button class="send" id="send">Send request</button>
+    <p class="hint">Presets are the blueprint's smoke-test cases — edit freely and resend.</p>
+  </section>
+  <section class="card">
+    <div class="meta">
+      <label style="margin:0">Response</label>
+      <span class="badge" id="status"></span>
+      <span class="lat mono" id="lat"></span>
+    </div>
+    <pre class="out" id="out">Pick an endpoint on the left and hit send.</pre>
+    <div class="hist" id="hist"></div>
+  </section>
+</main>
+<script>
+const SMOKE = [
+  {
+    "method": "post",
+    "path": "/api/incidents",
+    "json": {
+      "title": "Checkout latency spike",
+      "service": "payments",
+      "severity": "high",
+      "signal": "p99 latency timeout errors rising"
+    }
+  },
+  {
+    "method": "get",
+    "path": "/api/incidents"
+  }
+];
+const eps = document.getElementById('eps'), body = document.getElementById('body'),
+      out = document.getElementById('out'), badge = document.getElementById('status'),
+      lat = document.getElementById('lat'), hist = document.getElementById('hist'),
+      send = document.getElementById('send');
+let active = 0;
+function renderEps() {
+  eps.innerHTML = '';
+  SMOKE.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'ep' + (i === active ? ' active' : '');
+    const m = c.method.toUpperCase();
+    b.innerHTML = '<span class="method ' + (m === 'GET' ? 'm-get' : 'm-post') + '">' + m +
+                  '</span><span class="path mono">' + c.path + '</span>';
+    b.onclick = () => { active = i; renderEps(); load(); };
+    eps.appendChild(b);
+  });
+}
+function load() {
+  const c = SMOKE[active];
+  body.value = c && c.json ? JSON.stringify(c.json, null, 2) : '';
+}
+async function call() {
+  const c = SMOKE[active];
+  send.disabled = true;
+  out.innerHTML = '<span class="spin"></span>calling ' + c.path + ' …';
+  badge.style.display = 'none'; lat.style.display = 'none';
+  const t0 = performance.now();
+  try {
+    const opts = { method: c.method.toUpperCase(), headers: {'Content-Type':'application/json'} };
+    if (body.value.trim() && opts.method !== 'GET') opts.body = body.value;
+    const r = await fetch(c.path, opts);
+    const ms = Math.round(performance.now() - t0);
+    const t = await r.text();
+    badge.textContent = r.status + (r.ok ? ' OK' : ''); badge.className = 'badge ' + (r.ok ? 'b-ok' : 'b-bad');
+    badge.style.display = 'inline-block';
+    lat.textContent = ms + ' ms'; lat.style.display = 'inline';
+    try { out.textContent = JSON.stringify(JSON.parse(t), null, 2); }
+    catch (_) { out.textContent = t; }
+    const h = document.createElement('div');
+    h.className = 'hist-item';
+    h.innerHTML = '<span class="method ' + (opts.method === 'GET' ? 'm-get' : 'm-post') + '">' +
+                  opts.method + '</span><span class="mono">' + c.path + '</span><span>' +
+                  r.status + ' · ' + ms + ' ms · ' + new Date().toLocaleTimeString() + '</span>';
+    h.onclick = () => { active = SMOKE.indexOf(c); renderEps(); load(); };
+    hist.prepend(h);
+    while (hist.children.length > 8) hist.removeChild(hist.lastChild);
+  } catch (e) {
+    badge.textContent = 'failed'; badge.className = 'badge b-bad'; badge.style.display = 'inline-block';
+    out.textContent = 'request failed: ' + e;
+  }
+  send.disabled = false;
+}
+send.onclick = call;
+renderEps(); load();
+</script>
+</body>
+</html>
