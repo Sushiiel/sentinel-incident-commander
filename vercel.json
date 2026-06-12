@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": { "includeFiles": ["backend/**"] }
+    },
+    { "src": "frontend/index.html", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/", "dest": "/frontend/index.html" },
+    { "src": "/frontend/(.*)", "dest": "/frontend/$1" },
+    { "src": "/(.*)", "dest": "/api/index.py" }
+  ]
+}
